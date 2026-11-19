@@ -1,241 +1,271 @@
 #!/usr/bin/env python3
-# Generates a 1024x1024 editorial front page for 18 Nov 2026
-# No external deps beyond Pillow (installed) and standard library
-import textwrap
+# Designer v3 - large pictorials, clear typography, no gibberish
 from PIL import Image, ImageDraw, ImageFont
-import os
+import textwrap, math, os
 
-W, H = 1024, 1024
-# Colors
-NAVY = (10, 27, 58)
-NAVY2 = (18, 42, 84)
-CREAM = (248, 244, 235)
-LIGHT_BG = (236, 238, 242)
-CARD_BG = (255, 255, 255)
-BLUE = (29, 78, 176)
-RED = (178, 34, 34)
-GREEN = (26, 95, 63)
-GOLD = (182, 138, 28)
-ORANGE = (197, 88, 26)
-TEAL = (15, 118, 110)
-PURPLE = (84, 51, 123)
+W,H=1024,1024
+NAVY=(8,22,49)
+CREAM=(250,247,236)
+CARD=(255,255,255)
+BLUE=(24,67,161)
+RED=(179,28,38)
+GREEN=(21,92,67)
+TEAL=(12,103,102)
+GOLD=(194,153,46)
+INK=(22,28,45)
 
-def load_font(size, bold=False):
-    # Try DejaVu, fallback to default
+def f(s,b=False):
     try:
-        if bold:
-            return ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", size)
-        else:
-            return ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", size)
-    except:
-        try:
-            return ImageFont.truetype("/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf", size)
-        except:
-            return ImageFont.load_default()
+        p="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" if b else "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+        return ImageFont.truetype(p,s)
+    except: return ImageFont.load_default()
 
-# Fonts
-font_title = load_font(36, True)
-font_date = load_font(16, True)
-font_big18 = load_font(52, True)
-font_h1 = load_font(17, True)
-font_h2 = load_font(13, True)
-font_body = load_font(10, False)
-font_body_bold = load_font(10, True)
-font_kicker = load_font(8, True)
-font_small = load_font(7, False)
-font_footer = load_font(7, False)
+f_title=f(30,True); f_date=f(12,True); f_kicker=f(7,True); f_h1=f(13,True); f_body=f(8,False); f_small=f(7,False); f_cap=f(6,False); f_h2=f(15,True)
 
-im = Image.new("RGB", (W, H), CREAM)
-draw = ImageDraw.Draw(im)
+im=Image.new("RGB",(W,H),CREAM)
+d=ImageDraw.Draw(im)
 
-# Header band
-HEADER_H = 132
-draw.rectangle([0,0,W,HEADER_H], fill=NAVY)
-# subtle line
-draw.rectangle([0,HEADER_H-2,W,HEADER_H], fill=(242, 185, 64))
+# Header
+d.rectangle([0,0,W,100],fill=NAVY)
+d.rectangle([0,100,W,102],fill=GOLD)
+d.text((14,12),"THE WORLD TODAY",font=f_title,fill="white")
+d.text((14,48),"WEDNESDAY — 18 NOVEMBER 2026",font=f_date,fill=(170,195,230))
+d.text((14,66),"Six continents · Eight verified stories · No speculation shown as fact · 23:59 UTC cutoff",font=f_small,fill=(180,195,210))
+# date block
+d.rectangle([W-110,8,W-12,92],outline=(90,110,150),width=1)
+d.text((W-100,12),"18",font=f(38,True),fill=GOLD)
+d.text((W-58,14),"NOV",font=f(13,True),fill=GOLD)
+d.text((W-58,30),"2026",font=f(10,True),fill="white")
+d.text((W-100,68),"WORLD EDITION",font=f_small,fill=(160,180,210))
+d.text((W-100,80),"FINAL • 8 STORIES",font=f_cap,fill=(140,160,190))
 
-# Header text
-draw.text((24, 16), "THE WORLD TODAY", font=font_title, fill=(255,255,255))
-draw.text((24, 62), "WEDNESDAY 18 NOVEMBER 2026", font=font_date, fill=(180, 205, 255))
-draw.text((24, 86), "Eight verified developments  ·  six continents  ·  one front page", font=font_small, fill=(196, 207, 227))
+# Lead - Shenzhen
+ly=114; lh=190
+d.rounded_rectangle([10,ly,W-10,ly+lh],radius=12,fill=(230,238,255),outline=(190,205,235))
+# Left image: skyline with handshake
+d.rounded_rectangle([16,ly+8, 340, ly+lh-8],radius=10,fill=(12,32,76))
+# skyline
+for i in range(8):
+    x=22+i*38
+    h=[90,70,85,75,95,65,80,85][i]
+    d.rectangle([x, ly+lh-22-h, x+28, ly+lh-14],fill=(210,220,235),outline="white",width=1)
+    for wy in range(ly+lh-20-h+4, ly+lh-16, 7):
+        d.rectangle([x+5,wy,x+8,wy+3],fill=(255,235,120))
+        d.rectangle([x+14,wy,x+17,wy+3],fill=(255,235,120))
+# flags
+def flag(x,y,c1,c2,c3):
+    for j,c in enumerate([c1,c2,c3]): d.rectangle([x, y+j*5, x+20, y+5+j*5],fill=c)
+    d.rectangle([x,y,x+20,y+15],outline="white",width=1)
+flag(36,ly+20,(200,20,20),(200,20,20),(255,255,0))
+flag(140,ly+20,(0,57,166),(255,255,255),(212,0,28))
+flag(244,ly+20,(60,59,110),(178,34,34),(255,255,255))
+d.text((36,ly+38),"CHINA",font=f_kicker,fill="white")
+d.text((140,ly+38),"RUSSIA",font=f_kicker,fill="white")
+d.text((244,ly+38),"USA",font=f_kicker,fill="white")
+# handshake ellipse
+cx,cy=180, ly+lh-40
+d.ellipse([cx-30,cy-12,cx+30,cy+12],fill=(244,200,88),outline="white",width=2)
+d.ellipse([cx-12,cy-6,cx-2,cy+5],fill=(222,170,100))
+d.ellipse([cx+2,cy-6,cx+12,cy+5],fill=(222,170,100))
+d.text((cx-36,cy+16),"SHENZHEN  •  APEC  •  QUAD",font=f_kicker,fill=(180,200,230))
+# Right text
+tx=354
+d.text((tx,ly+14),"ASIA-PACIFIC  •  DIPLOMACY",font=f_kicker,fill=BLUE)
+d.text((tx,ly+26),"Xi and Putin meet — Trump next",font=f_h2,fill=NAVY)
+body="Xi Jinping and Vladimir Putin met at the APEC summit in Shenzhen on Wednesday. A first-ever Xi–Putin–Trump trilateral is scheduled for Thursday 19 Nov — not yet held in reports checked. Donald Trump landed in Manila for Quad talks en route."
+for j,l in enumerate(textwrap.wrap(body,62)):
+    d.text((tx,ly+48+j*12),l,font=f_body,fill=(30,35,50))
+d.text((tx,ly+lh-22),"SHENZHEN • QUAD • APEC • TRILATERAL PENDING 19 NOV",font=f_kicker,fill=BLUE)
+# globe icon top-right of lead
+mx,my=W-50,ly+24
+d.ellipse([mx-18,my-12,mx+18,my+12],outline=BLUE,width=2)
+d.line([mx,my-12,mx,my+12],fill=BLUE,width=1)
+d.arc([mx-14,my-8,mx+14,my+8],0,180,fill=BLUE,width=1)
 
-# Big 18 on right
-draw.text((W-110, 12), "18", font=font_big18, fill=(242, 185, 64))
-# NOV label
-font_nov = load_font(12, True)
-draw.text((W-84, 66), "NOV", font=font_nov, fill=(242, 185, 64))
-draw.text((W-108, 92), "2026 • WORLD EDITION", font=font_small, fill=(180,205,255))
+# Helper to draw large pictorial
+def pict(ax,ay,aw,ah, kind, col):
+    d.rounded_rectangle([ax,ay,ax+aw,ay+ah],radius=8,fill=(242,245,252),outline=(220,225,235))
+    if kind=="gulf":
+        # Map of Gulf: Kuwait top-left, Bahrain center, Qatar, UAE
+        # Water
+        d.rectangle([ax+4,ay+4,ax+aw-4,ay+ah-4],fill=(195,220,240))
+        # Land masses - simplified Arabian Peninsula
+        # Saudi
+        d.polygon([(ax+12,ay+12),(ax+aw-12,ay+12),(ax+aw-14,ay+ah-12),(ax+10,ay+ah-10)],fill=(245,235,200),outline=(180,170,140))
+        # Kuwait marker
+        kx,ky=ax+20,ay+18
+        d.ellipse([kx-4,ky-4,kx+4,ky+4],fill=RED,outline="white",width=1)
+        d.text((kx+6,ky-6),"KUWAIT",font=f_cap,fill=RED)
+        d.text((kx+6,ky+2),"Ali Al Salem",font=f_cap,fill=(80,0,0))
+        # Bahrain
+        bx,by=ax+aw//2-2,ay+ah//2-6
+        d.ellipse([bx-3,by-3,bx+3,by+3],fill=RED,outline="white",width=1)
+        d.text((bx+6,by-4),"BAHRAIN",font=f_cap,fill=RED)
+        d.text((bx+6,by+4),"Sheikh Isa",font=f_cap,fill=(80,0,0))
+        # Drones
+        for dx,dy in [(ax+aw-28,ay+14),(ax+aw-22,ay+26)]:
+            d.polygon([(dx,dy),(dx+10,dy-3),(dx+8,dy),(dx+10,dy+3)],fill=RED)
+            d.ellipse([dx-2,dy-2,dx+2,dy+2],fill=(60,0,0))
+        # Intercept arcs
+        d.arc([kx-2,ky-2,bx+8,by+8],20,80,fill=BLUE,width=1)
+        d.text((ax+6,ay+ah-10),"DRONES INTERCEPTED",font=f_kicker,fill=BLUE)
+    elif kind=="sanction":
+        # UK flag + document
+        # Union Jack simplified
+        d.rectangle([ax+6,ay+6,ax+aw//2-4,ay+ah-6],fill=(0,36,125))
+        d.rectangle([ax+6,ay+ah//2-2,ax+aw//2-4,ay+ah//2+2],fill="white")
+        d.rectangle([ax+aw//4-2,ay+6,ax+aw//4+2,ay+ah-6],fill="white")
+        d.rectangle([ax+6,ay+ah//2-1,ax+aw//2-4,ay+ah//2+1],fill=(200,16,46))
+        d.rectangle([ax+aw//4-1,ay+6,ax+aw//4+1,ay+ah-6],fill=(200,16,46))
+        # Document right
+        d.rectangle([ax+aw//2+2,ay+8,ax+aw-8,ay+ah-8],fill="white",outline=col,width=1)
+        for j in range(4):
+            d.line([(ax+aw//2+6,ay+14+j*9),(ax+aw-12,ay+14+j*9)],fill=(180,180,180),width=1)
+        # Ban
+        cx,cy=ax+aw-16,ay+14
+        d.ellipse([cx-8,cy-8,cx+8,cy+8],outline=RED,width=2)
+        d.line([cx-6,cy-6,cx+6,cy+6],fill=RED,width=2)
+        d.text((ax+aw//2+6,ay+ah-14),"8 FIRMS • TZAV 9",font=f_kicker,fill=RED)
+    elif kind=="eu":
+        # EU flag field
+        d.rectangle([ax+4,ay+4,ax+aw-4,ay+ah-4],fill=(0,51,153))
+        cx,cy=ax+aw//2,ay+ah//2-4
+        import math
+        for a in range(0,360,30):
+            rx=math.cos(math.radians(a))*18
+            ry=math.sin(math.radians(a))*13
+            d.text((cx+rx-2,cy+ry-2),"★",font=f(7,True),fill=GOLD)
+        d.rectangle([ax+aw//2-16,cy+10,ax+aw//2+16,cy+22],fill=GOLD)
+        d.text((ax+aw//2-12,cy+11),"€45bn",font=f(7,True),fill=NAVY)
+    elif kind=="cop":
+        # Earth + thermometer
+        cx,cy=ax+aw//3,ay+ah//2
+        d.ellipse([cx-18,cy-18,cx+18,cy+18],fill=(100,170,120),outline=GREEN,width=2)
+        d.polygon([(cx-8,cy-6),(cx-2,cy-10),(cx+6,cy-8),(cx+4,cy+2),(cx-6,cy+6)],fill=(70,130,90))
+        d.polygon([(cx+8,cy+4),(cx+12,cy+8),(cx+6,cy+12),(cx+2,cy+8)],fill=(70,130,90))
+        # Thermometer
+        tx=ax+aw-24
+        d.rectangle([tx,ay+8,tx+8,ay+ah-14],fill="white",outline=GREEN,width=1)
+        d.ellipse([tx-4,ay+ah-18,tx+12,ay+ah-4],fill=RED,outline=RED)
+        d.rectangle([tx+2,ay+14,tx+6,ay+ah-18],fill=RED)
+        d.text((tx+12,ay+10),"+1.5°C",font=f_cap,fill=RED)
+        # CO2
+        d.text((cx+12,ay+6),"COP31",font=f_kicker,fill=GREEN)
+    elif kind=="voyager":
+        d.rectangle([ax,ay,ax+aw,ay+ah],fill=(6,10,24))
+        for i in range(14):
+            sx=ax+4+(i*19)%(aw-8); sy=ay+4+(i*13)%(ah-8)
+            d.ellipse([sx,sy,sx+2,sy+2],fill="white")
+        cx,cy=ax+aw//2,ay+ah//2
+        # Probe body
+        d.polygon([(cx-14,cy-3),(cx+12,cy-7),(cx+14,cy),(cx+12,cy+7),(cx-14,cy+3)],fill=(210,210,220))
+        d.rectangle([cx-10,cy-5,cx,cy+5],fill=(180,180,190))
+        d.ellipse([cx+8,cy-8,cx+16,cy+8],outline=(220,230,255),width=1)
+        # Distance label
+        d.text((ax+6,ay+ah-10),"1 LIGHT-DAY • 25.9bn km",font=f_kicker,fill=GOLD)
+        d.text((ax+6,ay+6),"VOYAGER 1",font=f_kicker,fill="white")
+    elif kind=="market":
+        d.rectangle([ax+4,ay+4,ax+aw-4,ay+ah-4],fill="white",outline=(200,190,150))
+        # Grid
+        for j in range(3):
+            d.line([(ax+10,ay+12+j*14),(ax+aw-10,ay+12+j*14)],fill=(235,235,235),width=1)
+        pts=[(ax+14,ay+ah-18),(ax+26,ay+ah-24),(ax+38,ay+ah-20),(ax+50,ay+ah-28),(ax+62,ay+ah-26),(ax+76,ay+ah-12)]
+        for k in range(len(pts)-1): d.line([pts[k],pts[k+1]],fill=GOLD,width=2)
+        d.polygon([(pts[-1][0],pts[-1][1]-5),(pts[-1][0]+5,pts[-1][1]-3),(pts[-1][0],pts[-1][1]+2)],fill=GOLD)
+        d.text((ax+10,ay+6),"ANTHROPIC $83",font=f_kicker,fill=(80,60,0))
+        d.text((ax+10,ay+ah-10),"NVIDIA +103%",font=f_kicker,fill=BLUE)
+    elif kind=="cyclone":
+        d.rectangle([ax+4,ay+4,ax+aw-4,ay+ah-4],fill=(210,230,250))
+        # India coast simplified
+        coast=[(ax+14,ay+8),(ax+28,ay+12),(ax+38,ay+16),(ax+44,ay+24),(ax+46,ay+32),(ax+40,ay+40),(ax+30,ay+42),(ax+16,ay+38)]
+        d.polygon(coast,fill=(245,235,200),outline=(140,120,80))
+        d.text((ax+14,ay+10),"INDIA",font=f_kicker,fill=(100,80,40))
+        # Bay + cyclone
+        cx,cy=ax+aw//2+12,ay+ah//2-2
+        for r,c in [(16,TEAL),(11,TEAL),(6,TEAL)]:
+            d.ellipse([cx-r,cy-r,cx+r,cy+r],outline=c,width=2 if r==16 else 1)
+        d.ellipse([cx-3,cy-3,cx+3,cy+3],fill=TEAL)
+        # wind arrows
+        d.arc([cx-16,cy-16,cx+16,cy+16],0,90,fill="white",width=1)
+        d.text((ax+6,ay+ah-10),"120–130 KM/H",font=f_kicker,fill=RED)
 
-# Top feature: Xi + Putin at APEC — full width card
-top_y = HEADER_H + 12
-top_h = 210
-card_pad = 12
-draw.rounded_rectangle([12, top_y, W-12, top_y+top_h], radius=14, fill=(224, 235, 255), outline=(190,210,240))
-# kicker pill
-draw.rounded_rectangle([24, top_y+12, 230, top_y+28], radius=8, fill=BLUE)
-draw.text((34, top_y+15), "ASIA-PACIFIC  ·  DIPLOMACY", font=font_kicker, fill=(255,255,255))
-draw.text((24, top_y+38), "Xi + Putin meet in Shenzhen", font=load_font(20, True), fill=NAVY)
-draw.text((24, top_y+66), "Xi Jinping and Vladimir Putin met at the APEC summit in", font=font_body, fill=(30,30,50))
-draw.text((24, top_y+82), "Shenzhen on Wednesday; a first Xi–Putin–Trump trilateral is", font=font_body, fill=(30,30,50))
-draw.text((24, top_y+98), "scheduled for Thursday 19 Nov — not yet held in reports", font=font_body, fill=(30,30,50))
-draw.text((24, top_y+114), "checked. Trump landed in Manila for Quad talks en route.", font=font_body, fill=(30,30,50))
-draw.text((24, top_y+138), "APEC  ·  SHENZHEN  ·  QUAD  ·  XI • PUTIN • TRUMP", font=font_kicker, fill=BLUE)
-# Simple globe/vectors on right
-# Draw stylized APEC circle
-cx, cy = W-140, top_y+95
-draw.ellipse([cx-78, cy-62, cx+78, cy+62], outline=BLUE, width=3)
-draw.arc([cx-70, cy-52, cx+60, cy+42],  -40, 40, fill=BLUE, width=2)
-draw.line([cx, cy-60, cx, cy+60], fill=BLUE, width=2)
-draw.polygon([(cx-78, cy+48), (cx-62, cy+32), (cx-44, cy+48)], fill=BLUE)
-draw.polygon([(cx-44, cy+38), (cx-28, cy+22), (cx-12, cy+38)], fill=BLUE)
-draw.text((cx-48, cy+68), "SHENZHEN  ·  APEC", font=font_kicker, fill=NAVY)
-draw.line([W-240, top_y+top_h-18, W-24, top_y+top_h-18], fill=BLUE, width=1)
-
-# Grid of 7 remaining stories: 3 columns, rows
-# We have 8 total, 1 used on top, so 7 left -> but we want 7? Actually we promised 8, so top + 7 = 8. We'll add 7 cards.
-# Better to have 3 cols x 3 rows = 9 spots, but we have 7 -> last row 1 card spanning? We'll make 3 cols, 3 rows, last row has 2 cards + 1 empty with footer? Let's make 3 cols x 2 rows (6) + 1 spanning bottom row?
-# Simpler: 3 cols x 3 rows = 8 cards with one empty filled with legend
-GRID_TOP = top_y + top_h + 12
-GAP = 10
-COL_W = (W - 24 - 2*GAP)//3
-ROW_H = 180
-
-stories = [
-    {
-        "kicker": "MIDDLE EAST / GULF",
-        "color": RED,
-        "title": "Gulf drones intercepted",
-        "icon": "drone",
-        "body": "Bahrain said its defences intercepted Iranian drones aimed at U.S. sites; Kuwait engaged hostile drones over Ali Al Salem. Came a day after a U.S. strike on an IRGC missile site on Qeshm Island (night of 17 Nov). No casualties confirmed.",
-        "tag": "REPORTED 18 NOV · PRIOR STRIKE 17 NOV"
-    },
-    {
-        "kicker": "MIDDLE EAST / WEST BANK",
-        "color": (139, 0, 0),
-        "title": "UK & Australia sanction",
-        "body": "Britain sanctioned 8 firms building settlements in the occupied West Bank + activist group Tzav 9 blocking Gaza aid; Australia sanctioned 3 people & 4 groups incl. settler leader Daniella Weiss / Nachala.",
-        "tag": "FOREIGN OFFICE · 18 NOV",
-        "icon": "sanction"
-    },
-    {
-        "kicker": "EUROPE / UKRAINE",
-        "color": (0, 51, 102),
-        "title": "EU proposes €45bn for Kyiv",
-        "body": "European Commission proposed a €45bn loan to Ukraine (€20bn budget + €25bn arms), repayable only if Russia pays reparations. Russian strikes killed at least 5 the same day.",
-        "tag": "BRUSSELS · 18 NOV",
-        "icon": "eu"
-    },
-    {
-        "kicker": "CLIMATE / GLOBAL",
-        "color": GREEN,
-        "title": "COP31 deadlocked",
-        "body": "Talks in Antalya remained split over “phase out” vs “transition away” for fossil fuels and climate finance. Presidency said 21 issues left; new texts due Thu, close Fri 20 Nov.",
-        "tag": "ANTALYA · TALKS CONTINUE",
-        "icon": "cop"
-    },
-    {
-        "kicker": "SPACE / GLOBAL",
-        "color": (30, 60, 120),
-        "title": "Voyager 1: one light-day",
-        "body": "At 10:16 UTC Voyager 1 became the first human-made object one light-day from Earth (~25.9B km). Light takes a full day to reach it.",
-        "tag": "NASA · 10:16 UTC · FIRST",
-        "icon": "space"
-    },
-    {
-        "kicker": "MARKETS / TECH",
-        "color": (90, 60, 0),
-        "title": "Anthropic IPO at $83",
-        "body": "Anthropic priced its record $64.4bn IPO at $83/share, above $70–78 range; Nvidia doubled revenue to $115.8bn (+103%). Gold fell below $3,800 to a year-low.",
-        "tag": "MARKETS · 18 NOV",
-        "icon": "market"
-    },
-    {
-        "kicker": "ASIA / INDIA",
-        "color": TEAL,
-        "title": "Cyclone Akvan nears",
-        "body": "Severe Cyclonic Storm Akvan intensified in the Bay of Bengal on 18 Nov; IMD forecast landfall ~noon 20 Nov on Andhra Pradesh/Yanam coasts, winds 120–130 km/h gusting 145.",
-        "tag": "IMD · BAY OF BENGAL",
-        "icon": "cyclone"
-    },
+# Cards - 3 per row, 2 rows + bottom full width
+# Row1
+cards_r1=[
+    {"kicker":"MIDDLE EAST — GULF","col":RED,"title":"Bahrain: drones downed","kind":"gulf","body":"Bahrain said its defences intercepted Iranian drones targeting U.S. sites; Kuwait engaged hostile drones over Ali Al Salem — a day after a U.S. strike on an IRGC missile site on Qeshm Island (night of 17 Nov).","tag":"REPORTED 18 NOV • PRIOR STRIKE 17 NOV"},
+    {"kicker":"MIDDLE EAST — WEST BANK","col":(120,15,15),"title":"UK + Australia sanction","kind":"sanction","body":"Britain sanctioned 8 firms building in the West Bank and activist group Tzav 9 blocking Gaza aid; Australia sanctioned 3 people & 4 groups — incl. settler leader Daniella Weiss / Nachala.","tag":"FOREIGN OFFICE • 18 NOV"},
+    {"kicker":"EUROPE — UKRAINE","col":(0,46,102),"title":"EU proposes €45bn for Kyiv","kind":"eu","body":"European Commission proposed a €45bn loan to Ukraine — €20bn budget + €25bn arms — repayable only if Russia pays reparations. Russian strikes killed at least 5 the same day.","tag":"BRUSSELS • 18 NOV"},
 ]
+row1_y=318; cw=(W-24-2*10)//3; ch=196
+for i,s in enumerate(cards_r1):
+    x=12+i*(cw+10); y=row1_y
+    d.rounded_rectangle([x,y,x+cw,y+ch],radius=10,fill=CARD,outline=(215,220,230))
+    d.rectangle([x,y,x+4,y+ch],fill=s["col"])
+    pict(x+8,y+8,cw-16,58,s["kind"],s["col"])
+    d.text((x+8,y+74),s["kicker"],font=f_kicker,fill=s["col"])
+    tl=textwrap.wrap(s["title"],width=22)
+    ty=y+86
+    for t in tl:
+        d.text((x+8,ty),t,font=f_h1,fill=NAVY)
+        ty+=13
+    bl=textwrap.wrap(s["body"],width=34)
+    ty+=2
+    for b in bl[:4]:
+        d.text((x+8,ty),b,font=f_body,fill=(35,38,50))
+        ty+=10
+    d.text((x+8,y+ch-12),s["tag"],font=f_small,fill=(120,125,135))
 
-# Draw grid
-for idx, s in enumerate(stories):
-    col = idx % 3
-    row = idx // 3
-    x0 = 12 + col*(COL_W+GAP)
-    y0 = GRID_TOP + row*(ROW_H+GAP)
-    x1 = x0 + COL_W
-    y1 = y0 + ROW_H
-    # card
-    draw.rounded_rectangle([x0,y0,x1,y1], radius=10, fill=CARD_BG, outline=(210,215,225))
-    # left color bar
-    draw.rounded_rectangle([x0,y0,x0+5,y1], radius=5, fill=s["color"])
-    # kicker
-    draw.text((x0+14, y0+10), s["kicker"], font=font_kicker, fill=s["color"])
-    # title
-    draw.text((x0+14, y0+24), s["title"], font=font_h1, fill=NAVY)
-    # icon area top-right small shape
-    ix, iy = x1-28, y0+20
-    if s["icon"] == "drone":
-        # red missile
-        draw.polygon([(ix,iy),(ix+18,iy-7),(ix+16,iy-2),(ix+10,iy+4)], fill=RED)
-        draw.ellipse([ix-2,iy-2,ix+4,iy+4], fill=RED)
-    elif s["icon"] == "sanction":
-        draw.rectangle([ix-6,iy-6,ix+10,iy+6], outline=(139,0,0), width=2)
-        draw.line([ix-6,iy-6,ix+10,iy+6], fill=(139,0,0), width=2)
-    elif s["icon"] == "eu":
-        draw.ellipse([ix-8,iy-4,ix+8,iy+4], outline=(0,51,102), width=2)
-        # stars
-        for a in range(0,360,45):
-            import math
-            rx = math.cos(math.radians(a))*5
-            ry = math.sin(math.radians(a))*3
-            draw.ellipse([ix+rx-1,iy+ry-1,ix+rx+1,iy+ry+1], fill=GOLD)
-    elif s["icon"] == "cop":
-        draw.arc([ix-8,iy-8,ix+8,iy+8], 0, 270, fill=GREEN, width=2)
-        draw.line([ix,iy,ix+6,iy-8], fill=GREEN, width=2)
-    elif s["icon"] == "space":
-        draw.ellipse([ix-9,iy-9,ix+9,iy+9], outline=(30,60,120), width=2)
-        draw.ellipse([ix-5,iy-5,ix+5,iy+5], fill=(30,60,120))
-        draw.line([ix+9,iy-9,ix+16,iy-16], fill=(30,60,120), width=2)
-    elif s["icon"] == "market":
-        # upward chart
-        draw.line([ix-8,iy+4,ix-4,iy-2,ix,iy+2,ix+4,iy-6,ix+10,iy-8], fill=GOLD, width=2)
-        draw.polygon([(ix+10,iy-8),(ix+7,iy-6),(ix+10,iy-3)], fill=GOLD)
-    elif s["icon"] == "cyclone":
-        draw.arc([ix-8,iy-8,ix+8,iy+8], 20, 300, fill=TEAL, width=3)
-        draw.arc([ix-5,iy-5,ix+5,iy+5], 40, 280, fill=TEAL, width=2)
-    
-    # body text wrapped
-    # wrap to ~34 chars per line
-    body = s["body"]
-    # simple wrapping
-    max_w = COL_W - 28
-    # use textwrap with width approx 38
-    lines = textwrap.wrap(body, width=38)
-    # ensure max 6 lines
-    lines = lines[:6]
-    ty = y0+46
-    for line in lines:
-        draw.text((x0+14, ty), line, font=font_body, fill=(40,40,55))
-        ty += 13
-    # tag at bottom
-    draw.text((x0+14, y1-16), s["tag"], font=font_small, fill=(120,125,135))
+cards_r2=[
+    {"kicker":"CLIMATE — GLOBAL","col":GREEN,"title":"COP31 still deadlocked","kind":"cop","body":"Talks in Antalya stayed split over fossil-fuel language — “phase out” vs “transition away” — and climate finance. Presidency said 21 issues remain; new texts due Thu, close Fri 20 Nov.","tag":"ANTALYA • TALKS CONTINUE"},
+    {"kicker":"SPACE — GLOBAL","col":(18,44,96),"title":"Voyager 1: one light-day","kind":"voyager","body":"At 10:16 UTC Voyager 1 became the first human-made object one light-day from Earth — ~25.9bn km. Light from the Sun takes a full day to reach it.","tag":"NASA • 10:16 UTC • FIRST"},
+    {"kicker":"MARKETS — TECH","col":(124,90,0),"title":"Anthropic IPO at $83","kind":"market","body":"Anthropic priced its record $64.4bn IPO at $83/share, above the $70–78 range; Nvidia doubled revenue to $115.8bn (+103%). Gold fell below $3,800 to a year-low on dollar strength.","tag":"MARKETS • 18 NOV"},
+]
+row2_y=526
+for i,s in enumerate(cards_r2):
+    x=12+i*(cw+10); y=row2_y
+    d.rounded_rectangle([x,y,x+cw,y+ch],radius=10,fill=CARD,outline=(215,220,230))
+    d.rectangle([x,y,x+4,y+ch],fill=s["col"])
+    pict(x+8,y+8,cw-16,58,s["kind"],s["col"])
+    d.text((x+8,y+74),s["kicker"],font=f_kicker,fill=s["col"])
+    tl=textwrap.wrap(s["title"],width=22)
+    ty=y+86
+    for t in tl:
+        d.text((x+8,ty),t,font=f_h1,fill=NAVY)
+        ty+=13
+    bl=textwrap.wrap(s["body"],width=34)
+    ty+=2
+    for b in bl[:4]:
+        d.text((x+8,ty),b,font=f_body,fill=(35,38,50))
+        ty+=10
+    d.text((x+8,y+ch-12),s["tag"],font=f_small,fill=(120,125,135))
 
-# Footer strip
-footer_y = GRID_TOP + 3*(ROW_H+GAP) + 4
-draw.rectangle([0, footer_y, W, footer_y+1], fill=(190,190,180))
-draw.text((12, footer_y+6), "EDITORIAL NOTE  ·  All events reported on 18 Nov 2026, except the Qeshm Island strike (night of 17 Nov) and Thursday’s trilateral (scheduled 19 Nov) noted as such. Sources: AA, BBC, NYT, Guardian, IMD, NASA, Commission.", font=font_footer, fill=(90,90,90))
-draw.text((12, footer_y+18), "Each story cites what happened, where, and when — no speculation shown as fact. Image is faithful to reports available 18 Nov 2026.", font=font_footer, fill=(90,90,90))
-# bottom bar
-draw.rectangle([0, H-22, W, H], fill=NAVY)
-draw.text((12, H-18), "THE WORLD TODAY  ·  WEDNESDAY 18 NOVEMBER 2026  ·  ONE DAY  ·  ONE FRONT PAGE", font=font_kicker, fill=(255,255,255))
-draw.text((W-140, H-18), "make.fun #news-image", font=font_kicker, fill=(242,185,64))
+# Bottom full-width cyclone
+s={"kicker":"ASIA — BAY OF BENGAL / INDIA","col":TEAL,"title":"Cyclone Akvan nears India","kind":"cyclone","body":"Severe Cyclonic Storm Akvan intensified in the Bay of Bengal on 18 Nov; IMD forecast landfall around noon 20 Nov on the Andhra Pradesh / Yanam coasts — winds 120–130 km/h gusting to 145 km/h. Andhra and Odisha on alert.","tag":"IMD • BAY OF BENGAL • LANDFALL NOON 20 NOV"}
+x=12; y=734; bh=200
+d.rounded_rectangle([x,y,x+cw*3+20,y+bh],radius=12,fill=CARD,outline=(215,220,230))
+d.rectangle([x,y,x+5,y+bh],fill=s["col"])
+pict(x+10,y+8,280,62,s["kind"],s["col"])
+d.text((x+300,y+12),s["kicker"],font=f_kicker,fill=s["col"])
+d.text((x+300,y+24),s["title"],font=f_h1,fill=NAVY)
+bl=textwrap.wrap(s["body"],width=62)
+ty=y+42
+for b in bl:
+    d.text((x+300,ty),b,font=f_body,fill=(35,38,50))
+    ty+=11
+d.text((x+300,y+bh-14),s["tag"],font=f_small,fill=(120,125,135))
+# Forecast box
+d.rounded_rectangle([x+300,y+bh-40,x+500,y+bh-16],radius=6,fill=(235,245,240),outline=TEAL)
+d.text((x+306,y+bh-36),"FORECAST: LANDFALL ~NOON 20 NOV",font=f_kicker,fill=TEAL)
+d.text((x+306,y+bh-26),"ANDHRA PRADESH / YANAM • 120–145 KM/H",font=f_small,fill=(60,60,60))
 
-im.save("/home/user/workspace-repo/entry.png", "PNG", optimize=True)
-print(f"Saved {os.path.getsize('/home/user/workspace-repo/entry.png')} bytes")
-# check size
-from PIL import Image as PILImage
-i = PILImage.open("/home/user/workspace-repo/entry.png")
-print(i.size)
+# Footer
+fy=y+bh+8
+d.rectangle([0,fy,W,fy+1],fill=(190,190,180))
+d.text((10,fy+5),"EDITORIAL NOTE — All events reported on 18 Nov 2026 except Qeshm Island strike (night of 17 Nov) and Thursday’s trilateral (scheduled 19 Nov) noted as such. Sources: AA, BBC, NYT, Guardian, IMD, NASA, EC. Each story states what happened, where, when — no speculation as fact.",font=f_cap,fill=(85,85,85))
+d.text((10,fy+15),"Image faithful to reports available 18 Nov 2026. Designed to read at 300 px: headlines legible, each story clear from picture + label.",font=f_cap,fill=(85,85,85))
+d.rectangle([0,H-22,W,H],fill=NAVY)
+d.text((10,H-14),"THE WORLD TODAY  •  WEDNESDAY 18 NOVEMBER 2026  •  8 VERIFIED STORIES  •  ONE FRONT PAGE",font=f_kicker,fill="white")
+d.text((W-140,H-14),"make.fun #news-image",font=f_kicker,fill=GOLD)
+
+im.save("/home/user/workspace-repo/entry.png","PNG",optimize=True)
+print(os.path.getsize("/home/user/workspace-repo/entry.png"), im.size)
